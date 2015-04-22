@@ -1,19 +1,19 @@
 package com.test.util;
 
 import com.test.domain.Message;
+import org.joda.time.DateTime;
 
 /**
  * Created by alvarovilaplanagarcia on 21/04/15.
  */
 public class MessageDecorator {
-    final TimeProvider timeProvider;
 
-    public MessageDecorator(final TimeProvider timeProvider) {
-        this.timeProvider = timeProvider;
+    public String decorateWithUser(Message message, DateTime currentDate) {
+        return message.getUser() + " - " + decorate(message, currentDate);
     }
 
-    public String decorate(Message message) {
-        long seconds = (timeProvider.currentTime().getMillis() - message.getCreated().getMillis()) / 1000;
+    public String decorate(Message message, DateTime currentDate) {
+        long seconds = (currentDate.getMillis() - message.getCreated().getMillis()) / 1000;
         if (seconds < 60) {
             return message.getMessage() + " (" + seconds + " seconds ago)";
         } else {

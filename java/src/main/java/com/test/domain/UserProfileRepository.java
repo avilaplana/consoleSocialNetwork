@@ -2,36 +2,29 @@ package com.test.domain;
 
 import com.test.util.MessageComparator;
 import com.test.util.MessageDecorator;
+import org.joda.time.DateTime;
 
 import java.util.*;
 
-/**
- * Created by alvarovilaplanagarcia on 21/04/15.
- */
 public class UserProfileRepository implements ProfileRepository {
 
     final Map<String, UserProfile> profiles = new HashMap<String, UserProfile>();
-    final MessageDecorator messageDecorator;
 
-    public UserProfileRepository(final MessageDecorator messageDecorator) {
-        this.messageDecorator = messageDecorator;
-
-    }
     @Override
-    public UserProfile post(final String user, final Message message) {
+    public UserProfile post(final String user, final String message, final DateTime created) {
         if (profiles.containsKey(user)) {
-            profiles.get(user).addMessage(message);
+            profiles.get(user).addMessage(new Message(user, message, created));
         } else {
-            final UserProfile userProfile = new UserProfile(user);
-            userProfile.addMessage(message);
+            final UserProfile userProfile = new UserProfile();
+            userProfile.addMessage(new Message(user, message, created));
             profiles.put(user, userProfile);
         }
         return profiles.get(user).copy();
     }
 
     @Override
-    public List<String> reading(final String user) {
-        return decorateMessages(profiles.get(user).getMessages());
+    public List<Message> reading(final String user) {
+        return profiles.get(user).getMessages();
     }
 
     @Override
@@ -42,21 +35,13 @@ public class UserProfileRepository implements ProfileRepository {
     }
 
     @Override
-    public List<String> wall(final String user) {
+    public List<Message> wall(final String user) {
         final List<Message> followMessages = new LinkedList<Message>();
         followMessages.addAll(profiles.get(user).getMessages());
         for (String followed: profiles.get(user).getFollow()){
             followMessages.addAll(profiles.get(followed).getMessages());
         }
         Collections.sort(followMessages, new MessageComparator());
-        return decorateMessages(followMessages);
-    }
-
-    private List<String> decorateMessages(List<Message> messages){
-        final List <String> messagesToDecorate = new LinkedList<String>();
-        for (Message message: messages){
-            messagesToDecorate.add(messageDecorator.decorate(message));
-        }
-        return messagesToDecorate;
+        return followMessages;
     }
 }
